@@ -1,0 +1,63 @@
+use super::*;
+use std::iter::repeat;
+use std::str::from_utf8;
+
+#[test]
+fn reset_test() {
+    // Test that reset Sha1 structs act the same as new Sha1 structs
+    let mut s = Sha1::new();
+    s.update(b"hello, world :^)");
+    s.finish();
+    s.reset();
+    assert!(s.h0 == 0x67452301);
+    assert!(s.h1 == 0xEFCDAB89);
+    assert!(s.h2 == 0x98BADCFE);
+    assert!(s.h3 == 0x10325476);
+    assert!(s.h4 == 0xC3D2E1F0);
+    assert!(s.finish() == known_good_hash(b""));
+}
+
+#[test]
+fn update_test() {
+    // Test that update does not leave a chunk full without processing it
+    let mut s = Sha1::new();
+    let data: Vec<u8> = repeat(b'a').take(64).collect();
+    s.update(&data);
+    assert!(s.used == 0);
+    assert!(s.chunks_processed == 1);
+}
+
+#[test]
+fn general_test() {
+    // Test 0..300 x 'a' hash
+    let mut data: Vec<u8> = Vec::with_capacity(1000);
+
+    for n in 0..300 {
+        assert!(
+            Sha1::digest(&data) == known_good_hash(&data),
+            format!("{} x a", n)
+        );
+        data.push(b'a');
+    }
+}
+
+fn known_good_hash(data: &[u8]) -> [u32; 5] {
+    let sha1sum_cmd = format!("sha1sum <(printf \"{}\")", from_utf8(data).unwrap());
+    let output: Vec<u8> = std::process::Command::new("bash")
+        .args(&["-c", &sha1sum_cmd])
+        .output()
+        .unwrap()
+        .stdout
+        .iter()
+        .take_while(|&&c| c != b' ')
+        .map(|&c| c)
+        .collect();
+
+    let w0 = u32::from_str_radix(from_utf8(&output[0..8]).unwrap(), 16).unwrap();
+    let w1 = u32::from_str_radix(from_utf8(&output[8..16]).unwrap(), 16).unwrap();
+    let w2 = u32::from_str_radix(from_utf8(&output[16..24]).unwrap(), 16).unwrap();
+    let w3 = u32::from_str_radix(from_utf8(&output[24..32]).unwrap(), 16).unwrap();
+    let w4 = u32::from_str_radix(from_utf8(&output[32..40]).unwrap(), 16).unwrap();
+
+    [w0, w1, w2, w3, w4]
+}
