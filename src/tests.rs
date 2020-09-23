@@ -1,4 +1,5 @@
 use super::*;
+use std::convert::TryInto;
 use std::iter::repeat;
 use std::str::from_utf8;
 
@@ -42,22 +43,13 @@ fn general_test() {
 }
 
 fn known_good_hash(data: &[u8]) -> [u32; 5] {
-    let sha1sum_cmd = format!("sha1sum <(printf \"{}\")", from_utf8(data).unwrap());
-    let output: Vec<u8> = std::process::Command::new("bash")
-        .args(&["-c", &sha1sum_cmd])
-        .output()
-        .unwrap()
-        .stdout
-        .iter()
-        .take_while(|&&c| c != b' ')
-        .map(|&c| c)
-        .collect();
+    let bytes: [u8; 20] = mitsuhiko::Sha1::from(data).digest().bytes();
 
-    let w0 = u32::from_str_radix(from_utf8(&output[0..8]).unwrap(), 16).unwrap();
-    let w1 = u32::from_str_radix(from_utf8(&output[8..16]).unwrap(), 16).unwrap();
-    let w2 = u32::from_str_radix(from_utf8(&output[16..24]).unwrap(), 16).unwrap();
-    let w3 = u32::from_str_radix(from_utf8(&output[24..32]).unwrap(), 16).unwrap();
-    let w4 = u32::from_str_radix(from_utf8(&output[32..40]).unwrap(), 16).unwrap();
-
-    [w0, w1, w2, w3, w4]
+    [
+        u32::from_be_bytes(bytes[0..4].try_into().unwrap()),
+        u32::from_be_bytes(bytes[4..8].try_into().unwrap()),
+        u32::from_be_bytes(bytes[8..12].try_into().unwrap()),
+        u32::from_be_bytes(bytes[12..16].try_into().unwrap()),
+        u32::from_be_bytes(bytes[16..20].try_into().unwrap()),
+    ]
 }
