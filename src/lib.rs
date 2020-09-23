@@ -213,7 +213,7 @@ impl Sha1 {
         // This alternative makes the extension process
         // slightly faster on x86
         for i in 32..80 {
-            w[i] = w[i - 6] ^ w[i - 16] ^ w[i - 28] ^ w[i-32];
+            w[i] = w[i - 6] ^ w[i - 16] ^ w[i - 28] ^ w[i - 32];
             w[i] = leftrotate(w[i], 2);
         }
 
