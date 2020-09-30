@@ -1,7 +1,6 @@
 use super::*;
 use std::convert::TryInto;
 use std::iter::repeat;
-use std::str::from_utf8;
 
 #[test]
 fn reset_test() {
