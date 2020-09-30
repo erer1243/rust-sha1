@@ -8,6 +8,9 @@ use std::convert::TryInto;
 use std::fs::File;
 use std::io::{self, Write};
 
+/// Type alias for `[u32; 5]` for more readable usage of hash results.
+pub type Hash = [u32; 5];
+
 /// SHA-1 Hash context. Represents one single hash.
 ///
 /// Can be reset and reused, but cannot hash more than one thing at once.
@@ -92,7 +95,7 @@ impl Sha1 {
     /// s.finish()
     /// # }
     /// ```
-    pub fn digest<D: AsRef<[u8]>>(data: D) -> [u32; 5] {
+    pub fn digest<D: AsRef<[u8]>>(data: D) -> Hash {
         let mut s = Sha1::new();
         s.update(data);
         s.finish()
@@ -111,7 +114,7 @@ impl Sha1 {
     /// let hash = s.finish();
     /// Ok((hash, bytes))
     /// # }
-    pub fn digest_file(file: &mut File) -> io::Result<([u32; 5], u64)> {
+    pub fn digest_file(file: &mut File) -> io::Result<(Hash, u64)> {
         let mut s = Sha1::new();
         let bytes = io::copy(file, &mut s)?;
         let hash = s.finish();
@@ -152,7 +155,7 @@ impl Sha1 {
     /// Finishes all work for a given hash and returns the final result.
     /// Using a "finished" `Sha1` struct without calling `Sha1::reset()` will
     /// produce incorrect hashes.
-    pub fn finish(&mut self) -> [u32; 5] {
+    pub fn finish(&mut self) -> Hash {
         // To finalize the hash, we need to add at least 9 bytes to the next chunk. The 0x80 byte
         // at the end of the message data, and an 8 byte message length.
         let message_length: u64 = self.chunks_processed * 512 + 8 * self.used as u64;

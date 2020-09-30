@@ -41,7 +41,7 @@ fn general_test() {
     }
 }
 
-fn known_good_hash(data: &[u8]) -> [u32; 5] {
+fn known_good_hash(data: &[u8]) -> Hash {
     let bytes: [u8; 20] = mitsuhiko::Sha1::from(data).digest().bytes();
 
     [
